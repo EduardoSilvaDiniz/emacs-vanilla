@@ -34,6 +34,9 @@
 (use-package treemacs
   :ensure t)
 
+(use-package treemacs-evil
+  :ensure t)
+
 (use-package winum
   :ensure t
   :config
@@ -47,6 +50,32 @@
   (global-set-key (kbd "M-7") 'winum-select-window-7)
   (global-set-key (kbd "M-8") 'winum-select-window-8)
   (winum-mode))
+
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+(use-package lsp-mode
+  :ensure t
+  :bind (("C-c d" . lsp-decribe-thing-at-point)
+	 ("C-c a" . lsp-execute-code-action)
+	 :map lsp-mode-map
+	 ("C-c l" . lsp-command-map))
+  :config
+  (lsp-enable-whith-key-integration t))
+
+(use-package company
+  :ensure t
+  :hook ((emacs-lisp-mode . (lambda ()
+			      (setq-local company-backends '(company-elisp))))
+	 (emacs-lisp-mode . company-mode))
+  :config
+  (company-keymap--unbind-quick-acess company-active-map)
+  (company-tng-configure-default)
+  (setq company-idle-delay 0.1
+	company-minimum-prefix-length 1))
+
 
 (use-package gruvbox-theme
   :ensure t
@@ -93,6 +122,26 @@
 
 ;; Quebras de linha
 (global-visual-line-mode t)
+
+;; META -> space
+(global-unset-key (kbd "M-SPC"))
+(global-set-key (kbd "M-SPC n") #'suspend-frame)
+
+;; Instalação do auto-update
+(use-package auto-package-update
+  :ensure t
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "21:00"))
+(custom-set-variables
+ '(ispell-dictionary "brasileiro")
+ '(package-selected-packages
+   '(company flycheck lsp-mode auto-package-update use-package cmake-mode)))
+(custom-set-faces)
 
 ;; Tipo de cursor (box, bar ou hbar)
 (setq-default cursor-type 'box)

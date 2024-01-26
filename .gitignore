@@ -1,3 +1,8 @@
 auto-save-list/
 backups/
+eln-cache/
+elpa/
+.cache/
+.last-package-update-day
+projects
 
