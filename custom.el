@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ispell-dictionary "brasileiro")
- '(package-selected-packages '(company vertico use-package rainbow-mode evil)))
+ '(package-selected-packages '(yasnippet-snippets vertico use-package rainbow-mode evil)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

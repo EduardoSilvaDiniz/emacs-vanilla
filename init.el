@@ -1,3 +1,4 @@
+(global-unset-key (kbd "C-SPC")) ; Inibe Ctrl-Z (suspend frame)
 (require 'package)
 (package-initialize)
 
@@ -58,12 +59,12 @@
 
 (use-package lsp-mode
   :ensure t
-  :bind (("C-c d" . lsp-decribe-thing-at-point)
-	 ("C-c a" . lsp-execute-code-action)
-	 :map lsp-mode-map
-	 ("C-c l" . lsp-command-map))
+  :bind (:map lsp-mode-map
+	      ("C-c d" . lsp-decribe-thing-at-point)
+	      ("C-c a" . lsp-execute-code-action))
   :config
-  (lsp-enable-whith-key-integration t))
+  (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+  (lsp-enable-which-key-integration t))
 
 (use-package company
   :ensure t
@@ -71,26 +72,60 @@
 			      (setq-local company-backends '(company-elisp))))
 	 (emacs-lisp-mode . company-mode))
   :config
-  (company-keymap--unbind-quick-acess company-active-map)
+  (global-set-key (kbd "C-SPC") 'company-auto-complete)
+  (company-keymap--unbind-quick-access company-active-map)
   (company-tng-configure-default)
   (setq company-idle-delay 0.1
 	company-minimum-prefix-length 1))
 
+(use-package go-mode
+  :ensure t
+  :hook ((go-mode . lsp-deferred)
+	 (go-mdoe . company-mode))
+  :bind (:map go-mode-map
+	      ("<f6>" . gofmt)
+	      ("C-c 6" . gofmt))
+  :config
+  (require 'lsp-go)
+  (setq lsp-go-analyses
+	'((fieldalignment . t)
+	  (nilness        . t)
+	  (unusedwrite    . t)
+	  (unusedparams   . t)))
+  ;; GOPATH/bin
+  (add-to-list 'exec-path "goimports"))
+
+(use-package flycheck
+  :ensure t)
 
 (use-package gruvbox-theme
   :ensure t
   :config
   (load-theme 'gruvbox-dark-medium t))
 
+(use-package lsp-java
+  :ensure t
+  :config (add-hook 'java-mode-hook 'lsp))
+
+(use-package yasnippet
+  :ensure t
+  :config (yas-global-mode))
+
+(global-set-key (kbd "<f5>") #'recompile)
 (setq custom-file "~/.config/emacs/custom.el")
 (load custom-file t)
 
-(setq auto-save-file-name-transforms
-      '(("." "~/.config/emacs/auto-save-list/" t))
-      backup-directory-alist
-      '(("." . "~/.config/emacs/backups")))
+;; Não funciona 
+;;(setq auto-save-file-name-transforms
+;;      '(("." "~/.config/emacs/auto-save-list/" t))
+;;      backup-directory-alist
+;;      '(("." . "~/.config/emacs/backups")))
 
-(set-face-attribute 'region nil :background "deep sky blue")
+; Organizando os backups
+(setq backup-directory-alist `(("." . "~/.saves")))
+
+
+;;(set-face-attribute 'region nil :background "deep sky blue")
 (set-face-attribute 'default nil :height 140)
 ;; Configuração básica do Emacs
 (setq inhibit-startup-message t)     ; Adeus, buffer assustador!
