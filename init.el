@@ -2,6 +2,7 @@
 (require 'package)
 (package-initialize)
 
+
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 
 (unless (package-installed-p 'use-package)
@@ -101,37 +102,41 @@
 ;; Minha CONFIG
 
 ;;;; Code Completion
-(use-package corfu
-  :ensure t
-  ;; Optional customizations
-  :custom
-  (corfu-cycle t)                 ; Allows cycling through candidates
-  (corfu-auto t)                  ; Enable auto completion
-  (corfu-auto-prefix 2)
-  (corfu-auto-delay 0.1)
-  (corfu-popupinfo-delay '(0.1 . 0.1))
-  (corfu-preview-current 'insert) ; insert previewed candidate
-  (corfu-preselect 'prompt)
-  (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
-  ;; Optionally use TAB for cycling, default is `corfu-complete'.
-  :bind (:map corfu-map
-              ("M-SPC"      . corfu-insert-separator)
-              ("C-j"      . corfu-next)
-              ;;([tab]        . corfu-next)
-              ("C-k"      . corfu-previous)
-              ;;([backtab]    . corfu-previous)
-              ("S-<return>" . corfu-insert)
-              ("RET"        . nil))
-  :init
-  (global-corfu-mode)
-  (corfu-history-mode)
-  (corfu-popupinfo-mode) ; Popup completion info
-  :config
-  (add-hook 'eshell-mode-hook
-            (lambda () (setq-local corfu-quit-at-boundary t
-                                   corfu-quit-no-match t
-                                   corfu-auto nil)
-              (corfu-mode))))
+;;(use-package corfu
+;;  :ensure t
+;;  ;; Optional customizations
+;;  :custom
+;;  (corfu-cycle t)                 ; Allows cycling through candidates
+;;  (corfu-auto t)                  ; Enable auto completion
+;;  (corfu-auto-prefix 2)
+;;  (corfu-auto-delay 0.1)
+;;  (corfu-popupinfo-delay '(0.1 . 0.1))
+;;  (corfu-preview-current 'insert) ; insert previewed candidate
+;;  (corfu-preselect 'prompt)
+;;  (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
+;;  ;; Optionally use TAB for cycling, default is `corfu-complete'.
+;;  :bind (:map corfu-map
+;;	      ([tab]       . corfu-complete)
+;;	      ([backtab] . corfu-popupinfo-toggle)
+;;	      ("S-TAB"     . corfu-next)
+;;	      ([tab]       . corfu-next))
+;;              ;;("M-SPC"      . corfu-insert-separator)
+;;              ;;("C-j"      . corfu-next)
+;;              ;;([tab]        . corfu-next)
+;;              ;;("C-k"      . corfu-previous)
+;;              ;;([backtab]    . corfu-previous)
+;;              ;;("S-<return>" . corfu-insert)
+;;              ;;("RET"        . nil))
+;;  :init
+;;  (global-corfu-mode)
+;;  (corfu-history-mode)
+;;  (corfu-popupinfo-mode) ; Popup completion info
+;;  :config
+;;  (add-hook 'eshell-mode-hook
+;;            (lambda () (setq-local corfu-quit-at-boundary t
+;;                                   corfu-quit-no-match t
+;;                                   corfu-auto nil)
+;;              (corfu-mode))))
 
 (use-package gruvbox-theme
   :ensure t
@@ -227,3 +232,75 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+    (backward-char 1)
+    (if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (cond
+   ((minibufferp)
+    (minibuffer-complete))
+   (t
+    (indent-for-tab-command)
+    (if (or (not yas/minor-mode)
+        (null (do-yas-expand)))
+    (if (check-expansion)
+        (progn
+          (company-manual-begin)
+          (if (null company-candidates)
+          (progn
+            (company-abort)
+            (indent-for-tab-command)))))))))
+
+(defun tab-complete-or-next-field ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand)))
+      (if company-candidates
+      (company-complete-selection)
+    (if (check-expansion)
+      (progn
+        (company-manual-begin)
+        (if (null company-candidates)
+        (progn
+          (company-abort)
+          (yas-next-field))))
+      (yas-next-field)))))
+
+(defun expand-snippet-or-complete-selection ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand))
+      (company-abort))
+      (company-complete-selection)))
+
+(defun abort-company-or-yas ()
+  (interactive)
+  (if (null company-candidates)
+      (yas-abort-snippet)
+    (company-abort)))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+(global-set-key (kbd "TAB") 'tab-indent-or-complete)
+(global-set-key [(control return)] 'company-complete-common)
+
+(define-key company-active-map [tab] 'expand-snippet-or-complete-selection)
+(define-key company-active-map (kbd "TAB") 'expand-snippet-or-complete-selection)
+
+(define-key yas-minor-mode-map [tab] nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+
+(define-key yas-keymap [tab] 'tab-complete-or-next-field)
+(define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
+(define-key yas-keymap [(control tab)] 'yas-next-field)
+(define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
