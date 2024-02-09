@@ -1,4 +1,5 @@
 (global-unset-key (kbd "C-SPC")) ; Inibe Ctrl-Z (suspend frame)
+(setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))) ; define dashboard como pagina inicial
 (require 'package)
 (package-initialize)
 
@@ -11,6 +12,7 @@
 
 (use-package evil
   :ensure t
+  :init (setq evil-want-C-i-jump nil)
   :config
   (evil-mode)
   (evil-set-undo-system 'undo-redo))
@@ -39,20 +41,6 @@
 (use-package treemacs-evil
   :ensure t)
 
-(use-package winum
-  :ensure t
-  :config
-  (global-set-key (kbd "M-0") 'treemacs-select-window)
-  (global-set-key (kbd "M-1") 'winum-select-window-1)
-  (global-set-key (kbd "M-2") 'winum-select-window-2)
-  (global-set-key (kbd "M-3") 'winum-select-window-3)
-  (global-set-key (kbd "M-4") 'winum-select-window-4)
-  (global-set-key (kbd "M-5") 'winum-select-window-5)
-  (global-set-key (kbd "M-6") 'winum-select-window-6)
-  (global-set-key (kbd "M-7") 'winum-select-window-7)
-  (global-set-key (kbd "M-8") 'winum-select-window-8)
-  (winum-mode))
-
 (use-package which-key
   :ensure t
   :config
@@ -73,7 +61,6 @@
 			      (setq-local company-backends '(company-elisp))))
 	 (emacs-lisp-mode . company-mode))
   :config
-  (global-set-key (kbd "C-SPC") 'company-auto-complete)
   (company-keymap--unbind-quick-access company-active-map)
   (company-tng-configure-default)
   (setq company-idle-delay 0.1
@@ -96,47 +83,30 @@
   ;; GOPATH/bin
   (add-to-list 'exec-path "goimports"))
 
+(use-package haskell-mode
+  :ensure t
+  :hook ((haskell-mode . lsp-deferred)
+	 (haskell-mode . company-mode)))
+
 (use-package flycheck
+  :ensure t
+  :config
+  (flycheck-highlighting-mode sexps))
+
+;; Minha Config
+
+(use-package org
+  :ensure t
+  :config
+  (setq org-startup-indented t))
+
+(use-package magit
   :ensure t)
 
-;; Minha CONFIG
-
-;;;; Code Completion
-;;(use-package corfu
-;;  :ensure t
-;;  ;; Optional customizations
-;;  :custom
-;;  (corfu-cycle t)                 ; Allows cycling through candidates
-;;  (corfu-auto t)                  ; Enable auto completion
-;;  (corfu-auto-prefix 2)
-;;  (corfu-auto-delay 0.1)
-;;  (corfu-popupinfo-delay '(0.1 . 0.1))
-;;  (corfu-preview-current 'insert) ; insert previewed candidate
-;;  (corfu-preselect 'prompt)
-;;  (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
-;;  ;; Optionally use TAB for cycling, default is `corfu-complete'.
-;;  :bind (:map corfu-map
-;;	      ([tab]       . corfu-complete)
-;;	      ([backtab] . corfu-popupinfo-toggle)
-;;	      ("S-TAB"     . corfu-next)
-;;	      ([tab]       . corfu-next))
-;;              ;;("M-SPC"      . corfu-insert-separator)
-;;              ;;("C-j"      . corfu-next)
-;;              ;;([tab]        . corfu-next)
-;;              ;;("C-k"      . corfu-previous)
-;;              ;;([backtab]    . corfu-previous)
-;;              ;;("S-<return>" . corfu-insert)
-;;              ;;("RET"        . nil))
-;;  :init
-;;  (global-corfu-mode)
-;;  (corfu-history-mode)
-;;  (corfu-popupinfo-mode) ; Popup completion info
-;;  :config
-;;  (add-hook 'eshell-mode-hook
-;;            (lambda () (setq-local corfu-quit-at-boundary t
-;;                                   corfu-quit-no-match t
-;;                                   corfu-auto nil)
-;;              (corfu-mode))))
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
 
 (use-package gruvbox-theme
   :ensure t
@@ -154,12 +124,6 @@
 (global-set-key (kbd "<f5>") #'recompile)
 (setq custom-file "~/.config/emacs/custom.el")
 (load custom-file t)
-
-;; Não funciona 
-;;(setq auto-save-file-name-transforms
-;;      '(("." "~/.config/emacs/auto-save-list/" t))
-;;      backup-directory-alist
-;;      '(("." . "~/.config/emacs/backups")))
 
 ; Organizando os backups
 (setq backup-directory-alist `(("." . "~/.saves")))
@@ -232,75 +196,3 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-(defun check-expansion ()
-  (save-excursion
-    (if (looking-at "\\_>") t
-      (backward-char 1)
-      (if (looking-at "\\.") t
-    (backward-char 1)
-    (if (looking-at "->") t nil)))))
-
-(defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
-
-(defun tab-indent-or-complete ()
-  (interactive)
-  (cond
-   ((minibufferp)
-    (minibuffer-complete))
-   (t
-    (indent-for-tab-command)
-    (if (or (not yas/minor-mode)
-        (null (do-yas-expand)))
-    (if (check-expansion)
-        (progn
-          (company-manual-begin)
-          (if (null company-candidates)
-          (progn
-            (company-abort)
-            (indent-for-tab-command)))))))))
-
-(defun tab-complete-or-next-field ()
-  (interactive)
-  (if (or (not yas/minor-mode)
-      (null (do-yas-expand)))
-      (if company-candidates
-      (company-complete-selection)
-    (if (check-expansion)
-      (progn
-        (company-manual-begin)
-        (if (null company-candidates)
-        (progn
-          (company-abort)
-          (yas-next-field))))
-      (yas-next-field)))))
-
-(defun expand-snippet-or-complete-selection ()
-  (interactive)
-  (if (or (not yas/minor-mode)
-      (null (do-yas-expand))
-      (company-abort))
-      (company-complete-selection)))
-
-(defun abort-company-or-yas ()
-  (interactive)
-  (if (null company-candidates)
-      (yas-abort-snippet)
-    (company-abort)))
-
-(global-set-key [tab] 'tab-indent-or-complete)
-(global-set-key (kbd "TAB") 'tab-indent-or-complete)
-(global-set-key [(control return)] 'company-complete-common)
-
-(define-key company-active-map [tab] 'expand-snippet-or-complete-selection)
-(define-key company-active-map (kbd "TAB") 'expand-snippet-or-complete-selection)
-
-(define-key yas-minor-mode-map [tab] nil)
-(define-key yas-minor-mode-map (kbd "TAB") nil)
-
-(define-key yas-keymap [tab] 'tab-complete-or-next-field)
-(define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
-(define-key yas-keymap [(control tab)] 'yas-next-field)
-(define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)

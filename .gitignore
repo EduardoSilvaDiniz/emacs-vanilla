@@ -10,5 +10,6 @@ projects
 eclipse.jdt.ls/
 workspace/
 url/
-
-
+recentf
+transient/
+tree-sitter/
