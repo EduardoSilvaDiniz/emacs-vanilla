@@ -216,17 +216,54 @@
   :config
   (add-hook 'sh-mode-hook 'flycheck-mode))
 
-;; Minha Config
+;; Minha Config ;;
+(use-package general :ensure t
+  :config
+  (general-create-definer rex-leader
+    :states '(normal visual insert emacs)
+    :keymaps 'override
+    :prefix "SPC"
+    :non-normal-prefix "C-SPC")
+  (rex-leader
+    "n" 'org-roam-window-map
+    "w" 'evil-window-map))
 
-(use-package haskell-mode
+;; ORG-mode ;;
+
+(setq ispell-program-name "hunspell")
+
+(add-hook 'org-mode-hook #'flyspell-mode) ;; Ativar o flyspell-mode automaticamente para arquivos .org
+
+(use-package visual-fill-column
   :ensure t
-  :hook ((haskell-mode . lsp-deferred)
-	 (haskell-mode . company-mode)))
+  :config
+  (setq visual-fill-column-width 100) ;; A largura do texto centralizado
+  (setq visual-fill-column-center-text t) ;; Centralizar o texto
+  :hook
+  ;; Ativar o visual-fill-column no modo org
+  (org-mode . visual-fill-column-mode))
 
 (use-package org
   :ensure t
   :config
   (setq org-startup-indented t))
+
+(use-package org-roam
+  :ensure t
+  :hook
+  (after-init . org-roam-mode))
+
+;;(add-to-list 'package-initialize 'org-roam-db-sync)
+
+;; ORG-mode ;;
+
+
+;; Prog-mode ;;
+(use-package haskell-mode
+  :ensure t
+  :hook ((haskell-mode . lsp-deferred)
+	 (haskell-mode . company-mode)))
+
 
 (use-package magit
   :ensure t)
@@ -248,6 +285,8 @@
 (use-package yasnippet
   :ensure t
   :config (yas-global-mode))
+
+;; Prog-mode ;;
 
 (global-set-key (kbd "<f5>") #'recompile)
 (setq custom-file "~/.config/emacs/custom.el")
@@ -324,3 +363,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;; desativando plugins desnecessarios
+
+;; Desativar o carregamento dos jogos
